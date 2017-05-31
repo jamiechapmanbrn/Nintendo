@@ -3,11 +3,18 @@ Arduino Nintendo Library 1.2.1
 
 ![header](header.jpg)
 
-This library is made to connect Nintendo Controllers to your Arduino very easy.
-Make sure you grab the right hardware, tear off some cables to use your controllers
-on your PC for example. The requirement are written in each library readme part.
+This is a fork from nicohood's nintendo project ported to work with PIC microcontrollers- I'm using the pic 16F1455 with onboard no-external parts USB and 3.3v regulator to make the project really low part count.
 
-**IDE 1.6 compatible!**
+
+##### Supported devices
+
+Currently None!
+
+
+
+
+Original Documentation
+=====================
 
 ##### Supported devices
 Host mode means that you can hook up an controller to your Arduino and read its buttons.
