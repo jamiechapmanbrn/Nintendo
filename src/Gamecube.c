@@ -21,8 +21,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "Gamecube.h"
+#include <xc.h>
+#include<stdint.h>
 
+#include "Gamecube.h"
+#define bool char
 //================================================================================
 // Gamecube Controller
 //================================================================================
@@ -73,6 +76,10 @@ bool gc_read(const uint8_t pin, Gamecube_Report_t* report, const bool rumble)
     return (receivedBytes == sizeof(Gamecube_Report_t));
 }
 
+#define gameOUT PORTA
+#define gameIN LATA
+#define gameTristate TRISA
+#define bitMask _PORTA_RA0_MASK
 
 //================================================================================
 // Gamecube Console
@@ -84,16 +91,15 @@ uint8_t gc_write(const uint8_t pin, Gamecube_Status_t* status, Gamecube_Origin_t
     uint8_t ret = 0;
 
     // Get the port mask and the pointers to the in/out/mode registers
-    uint8_t bitMask = digitalPinToBitMask(pin);
-    uint8_t port = digitalPinToPort(pin);
-    volatile uint8_t* modePort = portModeRegister(port);
-    volatile uint8_t* outPort = portOutputRegister(port);
-    volatile uint8_t* inPort = portInputRegister(port);
+    volatile uint8_t* modePort = &gameTristate;
+    volatile uint8_t* outPort = &gameOUT;
+    volatile uint8_t* inPort = &gameIN;
 
-    // Don't want interrupts getting in the way
-    uint8_t oldSREG = SREG;
-    cli();
-
+    uint8_t interrupt_setting = INTCON & _INTCON_GIE_MASK;
+    
+    // don't want interrupts getting in the way
+    INTCON &= ~_INTCON_GIE_MASK;
+    
     // Read in data from the console
     // After receiving the init command you have max 80us to respond (for the data command)!
     uint8_t command[3] = {0,0,0}; // TODO do not init
@@ -151,7 +157,7 @@ uint8_t gc_write(const uint8_t pin, Gamecube_Status_t* status, Gamecube_Origin_t
     }
 
     // End of time sensitive code
-    SREG = oldSREG;
+    INTCON |= interrupt_setting;
 
     return ret;
 }

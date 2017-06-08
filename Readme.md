@@ -10,6 +10,12 @@ This is a fork from nicohood's nintendo project ported to work with PIC microcon
 
 Currently None!
 
+TODO: change the pin configurrations to non-arduinoy configs
+--Done
+TODO: Figure out what interrupt disabling is required for the 14F1455 micro
+--Done
+TODO: Rewrite asm routines into XC8/PICASM stuff
+
 
 
 

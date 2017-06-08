@@ -21,24 +21,31 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+#include <xc.h>
+#include<stdint.h>
 #include "Gamecube_N64.h"
 
+#define G1E_BITMASK 0x08
 //================================================================================
 // Gamecube/N64 I/O functions
 //================================================================================
 
+#define gameOUT PORTC
+#define gameIN LATC
+#define gameTristate TRISC
+#define bitMask _PORTA_RC3_MASK
+
 uint8_t gc_n64_send_get(const uint8_t pin, uint8_t* command, const uint8_t commandLen,
     uint8_t* report, const uint8_t reportLen){
     // get the port mask and the pointers to the in/out/mode registers
-    uint8_t bitMask = digitalPinToBitMask(pin);
-    uint8_t port = digitalPinToPort(pin);
-    volatile uint8_t* modePort = portModeRegister(port);
-    volatile uint8_t* outPort = portOutputRegister(port);
-    volatile uint8_t* inPort = portInputRegister(port);
+    volatile uint8_t* modePort = &gameTristate;
+    volatile uint8_t* outPort = &gameOUT;
+    volatile uint8_t* inPort = &gameIN;
 
+    uint8_t status = INTCON & _INTCON_GIE_MASK;
+    
     // don't want interrupts getting in the way
-    uint8_t oldSREG = SREG;
-    cli();
+    INTCON &= ~_INTCON_GIE_MASK;
 
     // send the command
     gc_n64_send(command, commandLen, modePort, outPort, bitMask);
@@ -47,7 +54,8 @@ uint8_t gc_n64_send_get(const uint8_t pin, uint8_t* command, const uint8_t comma
     uint8_t receivedBytes = gc_n64_get(report, reportLen, modePort, outPort, inPort, bitMask);
 
     // end of time sensitive code
-    SREG = oldSREG;
+    INTCON |= status;
+
 
     // return received length
     return receivedBytes;
@@ -166,7 +174,8 @@ Serial.println(n % 3);
 #define nopn96 nopn0
 #define nopn97 nopn1
 #define nopn98 nopn2
-#define nopn99 nopn0
+#define nopn99 nopn0
+
 #define nop_reg "%[nop]" // in this sketch we named the register like this
 #define nop_block(id, N) /* nops have to be >=3 in order to work*/ \
 "ldi " nop_reg ", (" #N "/3)\n" /* (1) ldi, start */ \
